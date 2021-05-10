@@ -14,7 +14,6 @@ interface defauleState {
 class Demo extends React.Component<any, defauleState> {
   constructor(props) {
     super(props);
-    // this.store = configStore()
     this.state = {
       content: '',
     }
