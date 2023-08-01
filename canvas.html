@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Canvas Drawing Board</title>
+  </head>
+  <body>
+    <canvas id="drawingCanvas" width="800" height="600" style="border: 1px solid black"></canvas>
+    <button onclick="clearCanvas(true)">Clear</button>
+    <button onclick="undo()">回退</button>
+    <button onclick="godo()">前进</button>
+  </body>
+</html>
+
+<script>
+  //   const canvas = document.getElementById('drawingCanvas');
+  // const ctx = canvas.getContext('2d');
+
+  // let isDrawing = false;
+  // let lastX = 0;
+  // let lastY = 0;
+  // let currentPath = [];
+  // let drawingStack = [];
+
+  // function startDrawing(e) {
+  //   isDrawing = true;
+  //   [lastX, lastY] = [e.offsetX, e.offsetY];
+  // }
+
+  // function draw(e) {
+  //   if (!isDrawing) return;
+  //   const x = e.offsetX;
+  //   const y = e.offsetY;
+  //   ctx.beginPath();
+  //   ctx.moveTo(lastX, lastY);
+  //   ctx.lineTo(x, y);
+  //   ctx.stroke();
+  //   [lastX, lastY] = [x, y];
+  // }
+
+  // function stopDrawing() {
+  //   if (isDrawing) {
+  //     isDrawing = false;
+  //     // 将 currentPath 的副本保存到 drawingStack
+  //     // drawingStack.push([...currentPath]);
+  //     currentPath = [];
+  //     console.warn('ss', drawingStack)
+  //   }
+  // }
+
+  // function clearCanvas() {
+  //   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  //   drawingStack = [];
+  // }
+
+  // function undo() {
+  //   if (drawingStack.length > 0) {
+  //     drawingStack.pop();
+  //     restoreDrawing();
+  //   }
+  // }
+
+  // function restoreDrawing() {
+  //   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  //   console.log('sss', drawingStack)
+  //   drawingStack.forEach((path) => {
+  //     ctx.beginPath();
+  //     ctx.moveTo(path[0].x, path[0].y);
+  //     for (let i = 1; i < path.length; i++) {
+  //       ctx.lineTo(path[i].x, path[i].y);
+  //       ctx.stroke();
+  //     }
+  //   });
+  // }
+
+  const canvas = document.getElementById('drawingCanvas')
+  const ctx = canvas.getContext('2d')
+  ctx.lineWidth = 4
+
+  let isDrawing = false
+  let lastX = 0
+  let lastY = 0
+  let undoStack = []
+  let index = 1
+
+  function startDrawing(e) {
+    isDrawing = true
+    ;[lastX, lastY] = [e.offsetX, e.offsetY]
+
+    ctx.beginPath()
+    // ctx.moveTo(lastX, lastY)
+    ctx.arc(lastX, lastY, 2, 0, 2 * Math.PI) // 0 到 2π 表示一个完整的圆
+    ctx.fill()
+
+    console.log('点点点', undoStack.length, index)
+    if (undoStack.length >= index) {
+      undoStack = undoStack.slice(0, undoStack.length - index + 1)
+      index = 1
+    } else {
+      // undoStack = []
+    }
+    console.log('lll', undoStack.length)
+    // undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height))
+
+    // ctx.stroke()
+  }
+
+  function draw(e) {
+    if (!isDrawing) return
+    // ctx.closePath()
+    ctx.beginPath()
+    ctx.moveTo(lastX, lastY)
+    ctx.lineTo(e.offsetX, e.offsetY)
+    ctx.stroke()
+    ;[lastX, lastY] = [e.offsetX, e.offsetY]
+  }
+
+  function stopDrawing() {
+    if (!isDrawing) return
+    isDrawing = false
+    ctx.closePath()
+    // 保存当前画板状态，以支持撤销
+    // undoStack.pop()
+    undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height))
+    console.warn(undoStack)
+  }
+
+  function clearCanvas(f) {
+    console.log(f)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (f) {
+      undoStack = []
+      index = 1
+    }
+  }
+
+  function godo() {
+    console.log('go==>length:', undoStack.length, 'index:', index)
+    if (index > 1) {
+      index--
+      const item = undoStack[undoStack.length - index]
+      ctx.putImageData(item, 0, 0)
+    }
+  }
+
+  function undo() {
+    console.log('length:', undoStack.length, 'index:', index)
+    if (index > undoStack.length) {
+      alert('不能点了')
+      return
+    }
+    if (undoStack.length == 1 || undoStack.length == index) {
+      index++
+      clearCanvas()
+      return
+    }
+    if (undoStack.length > 1) {
+      // 撤销操作：将画板状态恢复到上一步
+      // if (index == 1) index = 2
+      index++
+      const item = undoStack[undoStack.length - index]
+      ctx.putImageData(item, 0, 0)
+    }
+  }
+
+  // 按下
+  canvas.addEventListener('mousedown', startDrawing)
+  // 移动
+  canvas.addEventListener('mousemove', draw)
+  // 松开
+  canvas.addEventListener('mouseup', stopDrawing)
+  // 离开
+  canvas.addEventListener('mouseout', stopDrawing)
+</script>
